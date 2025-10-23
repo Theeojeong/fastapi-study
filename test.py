@@ -19,6 +19,4 @@ todo_data = {
     }
 }
 
-todo_data.pop(1)
-
-print(todo_data)
+print(todo_data[2]['is_done'])
