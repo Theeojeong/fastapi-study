@@ -3,14 +3,14 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database.connection import get_db
 from database.repository import (
-    get_fastapi,
-    get_fastapi_by_fastapi_id,
-    fastapi_create,
-    fastapi_update,
-    fastapi_delete,
+    get_todos,
+    get_todo_by_todo_id,
+    create_todo,
+    update_todo,
+    delete_todo,
 )
-from database.orm import fastapi
-from schema.response import ListFastAPIResponse, FastAPISchema
+from database.orm import Todo
+from schema.response import ListTodosResponse, TodoSchema
 from schema.request import TodoRequestBody
 from typing import List
 
@@ -21,36 +21,32 @@ app = FastAPI()
 
 @app.get("/")
 def health_check_handler():
-    return {"HelloWorld"}
+    return {"Hi": "HelloWorld"}
 
 
-@app.get("/fastapi")
+@app.get("/todos")
 def get_todos_handler(
     order: str | None = None,
     session: Session = Depends(get_db),
 ):
-    rets: List[fastapi] = get_fastapi(session=session)
+    rets: List[Todo] = get_todos(session=session)
 
     if order == "DESC":
-        return ListFastAPIResponse(
-            fastapi=[FastAPISchema.model_validate(ret) for ret in rets[::-1]]
+        return ListTodosResponse(
+            todos=[TodoSchema.model_validate(ret) for ret in rets[::-1]]
         )
-    return ListFastAPIResponse(
-        fastapi=[FastAPISchema.model_validate(ret) for ret in rets]
-    )
+    return ListTodosResponse(todos=[TodoSchema.model_validate(ret) for ret in rets])
 
 
-@app.get("/todo/{fastapi_id}", status_code=200, name="fastapi 단일 조회")
+@app.get("/todo/{todo_id}", status_code=200, name="todo 단일 조회")
 def get_todo_handler(
-    fastapi_id: int,
+    todo_id: int,
     session: Session = Depends(get_db),
 ):
-    ret: fastapi | None = get_fastapi_by_fastapi_id(
-        session=session, fastapi_id=fastapi_id
-    )
+    ret: Todo | None = get_todo_by_todo_id(session=session, todo_id=todo_id)
 
     if ret:
-        return FastAPISchema.model_validate(ret)
+        return TodoSchema.model_validate(ret)
     raise HTTPException(status_code=400, detail="Todo Not Found")
 
 
@@ -62,27 +58,28 @@ def post_todo_handler(
     request: TodoRequestBody,
     session: Session = Depends(get_db),
 ):
-    ret: fastapi = fastapi.create(request=request)
-    ret = fastapi_create(session=session, fastapi=ret)
-    return FastAPISchema.model_validate(ret)
+    ret: Todo = Todo.create(request=request)
+    ret: Todo = create_todo(session=session, todo=ret)
+    return TodoSchema.model_validate(ret)
 
 
 # ===================PATCH======================
 
 
-@app.patch("/todo/{fastapi_id}", status_code=200)
+@app.patch("/todo/{todo_id}", status_code=200)
 def patch_todo_handler(
-    fastapi_id: int,
+    todo_id: int,
     is_done: bool = Body(..., embed=True),
     session: Session = Depends(get_db),
 ):
-    ret: fastapi | None = get_fastapi_by_fastapi_id(
-        session=session, fastapi_id=fastapi_id,
+    ret: Todo | None = get_todo_by_todo_id(
+        session=session,
+        todo_id=todo_id,
     )
     if ret:
         ret.done() if is_done else ret.undone()
-        ret = fastapi_update(session=session, fastapi=ret)
-        return FastAPISchema.model_validate(ret)
+        ret = update_todo(session=session, todo=ret)
+        return TodoSchema.model_validate(ret)
 
     raise HTTPException(status_code=404, detail="Todo Not Found")
 
@@ -90,11 +87,14 @@ def patch_todo_handler(
 # ===================DELEET======================
 
 
-@app.delete("/todo/{fastapi_id}")
-def delete_todo_handler(fastapi_id: int, session: Session = Depends(get_db),):
+@app.delete("/todo/{todo_id}", status_code=204)
+def delete_todo_handler(todo_id: int, session: Session = Depends(get_db),):
 
-    ret: fastapi | None = get_fastapi_by_fastapi_id(session=session, fastapi_id=fastapi_id,)
+    ret: Todo | None = get_todo_by_todo_id(
+        session=session,
+        todo_id=todo_id,
+    )
     if not ret:
         raise HTTPException(status_code=404, detail="Todo Not Found")
 
-    fastapi_delete(session=session, fastapi_id=fastapi_id)
+    delete_todo(session=session, todo_id=todo_id)

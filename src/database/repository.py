@@ -1,28 +1,28 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select, delete
-from .orm import fastapi
+from .orm import Todo
 from typing import List
 
-def get_fastapi(session: Session) -> List[fastapi]:
-    return list(session.scalars(select(fastapi)))
+def get_todos(session: Session) -> List[Todo]:
+    return list(session.scalars(select(Todo)))
 
 
-def get_fastapi_by_fastapi_id(session: Session, fastapi_id: int) -> fastapi | None:
-    return session.scalar(select(fastapi).where(fastapi.id == fastapi_id))
+def get_todo_by_todo_id(session: Session, todo_id: int) -> Todo | None:
+    return session.scalar(select(Todo).where(Todo.id == todo_id))
 
-def fastapi_create(session: Session, fastapi: fastapi) -> fastapi:
-    session.add(fastapi)
+def create_todo(session: Session, todo: Todo) -> Todo:
+    session.add(todo)
     session.commit()
-    session.refresh(fastapi) # -> 여기서 id가 생성이 된다
-    return fastapi
+    session.refresh(todo)  # -> 여기서 id가 생성이 된다
+    return todo
 
 
-def fastapi_update(session: Session, fastapi: fastapi) -> fastapi:
-    session.add(fastapi)
+def update_todo(session: Session, todo: Todo) -> Todo:
+    session.add(todo)
     session.commit()
-    session.refresh(fastapi)
-    return fastapi
+    session.refresh(todo)
+    return todo
 
-def fastapi_delete(session: Session, fastapi_id: int) -> None:
-    session.execute(delete(fastapi).where(fastapi.id == fastapi_id))
+def delete_todo(session: Session, todo_id: int) -> None:
+    session.execute(delete(Todo).where(Todo.id == todo_id))
     session.commit()

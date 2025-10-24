@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from typing import List
 
-class FastAPISchema(BaseModel):
+class TodoSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -9,5 +9,5 @@ class FastAPISchema(BaseModel):
     is_done: bool
 
 
-class ListFastAPIResponse(BaseModel):
-    fastapi: List[FastAPISchema]
+class ListTodosResponse(BaseModel):
+    todos: List[TodoSchema]
