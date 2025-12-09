@@ -1,4 +1,4 @@
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Integer, Boolean, String, Column, ForeignKey
 from schema.request import TodoRequestBody
 
@@ -41,6 +41,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)            # id INT PRIMARY KEY AUTO_INCREMENT
     username = Column(String(256), nullable=False)    # username VARCHAR(256) NOT NULL
     password = Column(String(256), nullable=False)    # password VARCHAR(256) NOT NULL
+    todos = relationship("Todo", lazy="joined")
 
 
 # =============================================================================
