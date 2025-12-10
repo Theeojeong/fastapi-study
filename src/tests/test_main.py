@@ -1,6 +1,7 @@
 from database.orm import Todo
 from pytest_mock import MockerFixture
 from fastapi.testclient import TestClient
+from database.repository import ToDoRepository
 
 # ===================GET======================
 
@@ -12,17 +13,18 @@ def test_health_check(client):
 
 
 def test_get_todos(client, mocker: MockerFixture):
-    mocker.patch(
-        "main.get_fastapi",
+    mocker.patch.object(
+        ToDoRepository,
+        "get_todos",
         return_value=[
             Todo(id=2, contents="i want to earn money on my self", is_done=True),
             Todo(id=3, contents="i want to speak english well", is_done=True),
         ],
     )
-    response = client.get("/fastapi")
+    response = client.get("/todos")
     assert response.status_code == 200
     assert response.json() == {
-        "fastapi": [
+        "todos": [
             {"id": 2, "contents": "i want to earn money on my self", "is_done": True},
             {"id": 3, "contents": "i want to speak english well", "is_done": True},
         ]
@@ -30,17 +32,18 @@ def test_get_todos(client, mocker: MockerFixture):
 
 
 def test_get_todos_DESC(client, mocker: MockerFixture):
-    mocker.patch(
-        "main.get_fastapi",
+    mocker.patch.object(
+        ToDoRepository,
+        "get_todos",
         return_value=[
-            fastapi(id=2, contents="i want to earn money on my self", is_done=True),
-            fastapi(id=3, contents="i want to speak english well", is_done=True),
+            Todo(id=2, contents="i want to earn money on my self", is_done=True),
+            Todo(id=3, contents="i want to speak english well", is_done=True),
         ],
     )
-    response = client.get("/fastapi?order=DESC")
+    response = client.get("/todos?order=DESC")
     assert response.status_code == 200
     assert response.json() == {
-        "fastapi": [
+        "todos": [
             {"id": 3, "contents": "i want to speak english well", "is_done": True},
             {"id": 2, "contents": "i want to earn money on my self", "is_done": True},
         ]
@@ -48,14 +51,15 @@ def test_get_todos_DESC(client, mocker: MockerFixture):
 
 
 def test_get_todo(client, mocker: MockerFixture):
-    mocker.patch(
-        "main.get_fastapi_by_fastapi_id",
-        return_value=fastapi(
+    mocker.patch.object(
+        ToDoRepository,
+        "get_todo_by_todo_id",
+        return_value=Todo(
             id=2, contents="i want to earn money on my self", is_done=True
         ),
     )
 
-    response = client.get("fastapi/2")
+    response = client.get("todos/2")
 
     assert response.status_code == 200
     assert response.json() == {
@@ -66,9 +70,9 @@ def test_get_todo(client, mocker: MockerFixture):
 
 
 def test_get_todo_none(client, mocker: MockerFixture):
-    mocker.patch("main.get_fastapi_by_fastapi_id", return_value=None)
+    mocker.patch.object(ToDoRepository, "get_todo_by_todo_id", return_value=None)
 
-    response = client.get("fastapi/2")
+    response = client.get("todo/2")
 
     assert response.status_code == 400
     assert response.json() == {"detail": "Todo Not Found"}
@@ -76,14 +80,13 @@ def test_get_todo_none(client, mocker: MockerFixture):
 
 # ===================POST======================
 def test_post_todos(client, mocker: MockerFixture):
-    spy = mocker.spy(fastapi, "create")
-    mocker.patch(
-        "main.fastapi_create",
-        return_value=fastapi(id=6, contents="pytest", is_done=True),
+    spy = mocker.spy(Todo, "create")
+    mocker.patch.object(
+        ToDoRepository,
+        "create_todo",
+        return_value=Todo(id=6, contents="pytest", is_done=True),
     )
-
     body = {"contents": "pytest123", "is_done": False}
-
     response = client.post("/todos", json=body)
 
     assert spy.spy_return.contents == "pytest123"
@@ -98,13 +101,12 @@ def test_post_todos(client, mocker: MockerFixture):
 
 
 def test_update_todo(client: TestClient, mocker: MockerFixture):
-
-    mocker.patch(
-        "main.fastapi_update",
-        return_value=fastapi(id=2, contents="pytest", is_done=True),
+    mocker.patch.object(ToDoRepository,
+        "fastapi_update",
+        return_value=Todo(id=2, contents="pytest", is_done=True),
     )
 
-    done = mocker.patch.object(fastapi, "done")
+    done = mocker.patch.object(Todo, "done")
 
     response = client.patch("/todo/2", json={"is_done": True})
 
@@ -118,10 +120,10 @@ def test_update_todo(client: TestClient, mocker: MockerFixture):
 def test_delete_todo(client: TestClient, mocker: MockerFixture):
 
     # mocker.patch(
-    #     "main.get_fastapi_by_fastapi_id",
+    #     "api.todo.get_fastapi_by_fastapi_id",
     #     return_value=fastapi(id=2, contents="pytest", is_done=True),
     # )
-    mocker.patch("main.fastapi_delete", return_value=None)
+    mocker.patch.object(ToDoRepository, "fastapi_delete", return_value=None)
 
     response = client.delete("/todo/3")
 
