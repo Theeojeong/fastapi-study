@@ -43,6 +43,13 @@ class User(Base):
     password = Column(String(256), nullable=False)    # password VARCHAR(256) NOT NULL
     todos = relationship("Todo", lazy="joined")
 
+    @classmethod
+    def create(cls, username:str, hashed_password: str) -> "User":
+        return cls(
+            username=username,
+            password=hashed_password
+        )
+
 
 # =============================================================================
 # 📌 ORM 클래스 = SQL CREATE TABLE 문

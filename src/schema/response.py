@@ -11,3 +11,13 @@ class TodoSchema(BaseModel):
 
 class ListTodosResponse(BaseModel):
     todos: List[TodoSchema]
+
+
+class UserSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    username: str
+
+class JWTResponse(BaseModel):
+    access_token: str

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select, delete
 from fastapi import Depends
-from .orm import Todo
+from .orm import Todo, User
 from .connection import get_db
 from typing import List
 
@@ -48,6 +48,20 @@ class ToDoRepository:
         # Raw SQL: cur.execute("DELETE FROM todos WHERE id = %s", (todo_id,))
         #          conn.commit()
 
+class UserRepository:
+    def __init__(self, session: Session = Depends(get_db)):
+        self.session = session
+
+    def save_user(self, user: User) -> User:
+        self.session.add(instance=user)
+        self.session.commit()
+        self.session.refresh(instance=user)
+        return user
+
+    def get_user_by_username(self, username: str) -> User | None:
+        return self.session.scalar(select(User).where(User.username == username))
+
+    
 
 # =============================================================================
 # 📌 SQLAlchemy vs Raw SQL 문법 비교 요약
