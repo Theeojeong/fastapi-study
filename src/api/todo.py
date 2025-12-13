@@ -1,20 +1,33 @@
 from fastapi import APIRouter, Body, HTTPException, Depends
 from typing import List
 
-from database.repository import ToDoRepository
-from database.orm import Todo
+from database.repository import ToDoRepository, UserRepository
+from database.orm import Todo, User
 from schema.response import ListTodosResponse, TodoSchema
 from schema.request import TodoRequestBody
+from security import get_access_token
+from service.user import UserService
+
 
 router = APIRouter(prefix="/todos", tags=["Todo"])
+
 
 # ===================GET======================
 @router.get("")
 def get_todos_handler(
+    access_token: str = Depends(get_access_token),
     order: str | None = None,
-    todo_repo: ToDoRepository = Depends(ToDoRepository),
+    user_service: UserService = Depends(),
+    user_repo: UserRepository = Depends()
 ):
-    todos: List[Todo] = todo_repo.get_todos()
+    username: str = user_service.decode_jwt(access_token=access_token)
+
+    user: User | None = user_repo.get_user_by_username(username=username)
+
+    if not user:
+        raise HTTPException(status_code=401, detail="User Not Found")
+
+    todos: List[Todo] = user.todos
 
     if order == "DESC":
         return ListTodosResponse(

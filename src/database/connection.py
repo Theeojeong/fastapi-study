@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = "mysql+pymysql://root:todos@localhost:3306/todos"
 
-engine = create_engine(url=DATABASE_URL, echo=True) # conn
+engine = create_engine(url=DATABASE_URL)  # conn/ echo=True
 SessionFactory = sessionmaker(bind=engine, autoflush=False, autocommit=False) # cursor
 
 def get_db():

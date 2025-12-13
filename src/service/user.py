@@ -1,6 +1,7 @@
 import bcrypt
-from jose import jwt 
+from jose import jwt
 from datetime import datetime, timedelta
+
 
 class UserService:
     encoding: str = "UTF-8"
@@ -24,8 +25,16 @@ class UserService:
             claims={
                 "sub": username,
                 "exp": datetime.now() + timedelta(days=1),
-                "iat": datetime.now()
-            }, 
-            key=self.secret_key, 
+                "iat": datetime.now(),
+            },
+            key=self.secret_key,
             algorithm=self.jwt_algorithm,
         )
+
+    def decode_jwt(self, access_token: str) -> str:
+        payload: dict = jwt.decode(
+            token=access_token,
+            key=self.secret_key,
+            algorithms=self.jwt_algorithm,
+        )
+        return payload["sub"]
